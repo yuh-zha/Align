@@ -9,12 +9,7 @@ import torch
 import json
 import pickle
 import os
-import cleantext
-import truecase
-import os, sys
-from nltk.tokenize import sent_tokenize
-from tqdm import tqdm
-from align.flan_prompts import FLAN_PROMPTS, PROMPT_OPTIONS, PROMPT_MAPPING
+from flan_prompts import FLAN_PROMPTS, PROMPT_OPTIONS, PROMPT_MAPPING
 import jsonlines
 
 HUGGINGFACE_DATASETS = {
@@ -1296,10 +1291,10 @@ class Evaluator():
         sent1 = []
         sent2 = []
         true_score = []
-        for i in range(self.dataset['paws_qqp']['label'].size):
-            sent1.append(self.dataset['paws_qqp']['sentence1'][i][2:-1])
-            sent2.append(self.dataset['paws_qqp']['sentence2'][i][2:-1])
-            true_score.append(self.dataset['paws_qqp']['label'][i])
+        for sample in self.dataset['paws_qqp']:
+            sent1.append(sample['sentence1'])
+            sent2.append(sample['sentence2'])
+            true_score.append(sample['label'])
         
         pred_score = self.align_func(sent1, sent2)[ALL_TASKS['paws_qqp']].tolist()
         roc_auc = roc_auc_score(true_score, pred_score)

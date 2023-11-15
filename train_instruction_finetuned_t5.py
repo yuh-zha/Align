@@ -1,6 +1,5 @@
 from pytorch_lightning import Trainer, seed_everything
-from align.dataloader import FLANDataLoader
-from align.model import InstructFinetuningModel
+from instruction_finetuning_model import FLANDataLoader, InstructFinetuningModel
 from pytorch_lightning.callbacks import ModelCheckpoint
 from argparse import ArgumentParser
 import os

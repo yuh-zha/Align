@@ -263,7 +263,7 @@ class FEQAScorer():
 
 class QuestEvalScorer():
     def __init__(self) -> None:
-        import os, sys
+        import sys
         sys.path.append('baselines/QuestEval')
         from questeval.questeval_metric import QuestEval
         self.questeval = QuestEval(no_cuda=False)
@@ -310,7 +310,7 @@ class BERTScoreFFCIScorer():
 
 class DAEScorer():
     def __init__(self, model_dir, device=0) -> None:
-        import os, sys
+        import sys
         sys.path.insert(0, "baselines/factuality-datasets/")
         from evaluate_generated_outputs import daefact
         self.dae = daefact(model_dir, model_type='electra_dae', gpu_device=device)
@@ -323,7 +323,7 @@ class DAEScorer():
 class SummaCScorer():
     def __init__(self, summac_type='conv', device='cuda:0') -> None:
         self.summac_type = summac_type
-        import os, sys
+        import sys
         sys.path.append("baselines/summac")
         from summac.model_summac import SummaCZS, SummaCConv
 
@@ -445,3 +445,38 @@ class ROUGEScorer():
             output_score.append(scores.item())
 
         return torch.tensor(output_score), torch.tensor(output_score), torch.tensor(output_score)
+
+# FLAN T5 for NLU baselines
+class FLANScorer():
+    def __init__(self, device='cuda:0', custom_ckpt=None, model_name="google/flan-t5-base", batch_size=16) -> None:
+        from instruction_finetuning_model import InstructFinetuningModel
+        from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
+        self.device = device
+        self.batch_size = batch_size
+
+        if custom_ckpt is None:
+            self.model = AutoModelForSeq2SeqLM.from_pretrained(model_name).to(self.device)
+        else:
+            self.wrapped_model = InstructFinetuningModel(model=model_name).load_from_checkpoint(custom_ckpt).to(self.device)
+            self.wrapped_model.eval()
+            self.model = self.wrapped_model.base_model
+        self.tokenizer = AutoTokenizer.from_pretrained(model_name)
+        self.tokenizer.truncation_side = 'left'
+
+    def scorer(self, inputs):
+        self.pred_score = []
+        for batch in tqdm(self.chunks(inputs, self.batch_size), total=len(inputs)//self.batch_size + 1, desc="FLAN"):
+            toks = self.tokenizer(batch, padding=True, truncation=True, return_tensors='pt').to(self.device)
+            with torch.no_grad():
+                output = self.model.generate(**toks)
+                self.pred_score.extend(self.tokenizer.batch_decode(output, skip_special_tokens=True))
+        return self.pred_score
+
+    def chunks(self, lst, n):
+            """Yield successive n-sized chunks from lst."""
+            for i in range(0, len(lst), n):
+                yield lst[i:i + n]
+    
+    def generate_input(self, premise, hypo):
+        from flan_prompts import FLAN_PROMPTS, PROMPT_MAPPING
+        FLAN_PROMPTS[PROMPT_MAPPING[self.evaluating_dataset]][0]
