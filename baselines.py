@@ -478,5 +478,5 @@ class FLANScorer():
                 yield lst[i:i + n]
     
     def generate_input(self, premise, hypo):
-        from flan_prompts import FLAN_PROMPTS, PROMPT_MAPPING
+        from instruction_finetuning.flan_prompts import FLAN_PROMPTS, PROMPT_MAPPING
         FLAN_PROMPTS[PROMPT_MAPPING[self.evaluating_dataset]][0]

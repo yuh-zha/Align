@@ -9,7 +9,7 @@ import torch
 import json
 import pickle
 import os
-from flan_prompts import FLAN_PROMPTS, PROMPT_OPTIONS, PROMPT_MAPPING
+from instruction_finetuning.flan_prompts import FLAN_PROMPTS, PROMPT_OPTIONS, PROMPT_MAPPING
 import jsonlines
 
 HUGGINGFACE_DATASETS = {
